@@ -1,0 +1,10 @@
+**/.vs/
+**/[Dd]ebug/
+**/[Rr]elease/
+exclude/
+x64/
+x86/
+*.vc.*
+*.user
+*.sdf
+*.dll
