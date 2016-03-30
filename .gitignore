@@ -4,7 +4,9 @@
 exclude/
 x64/
 x86/
+openGL/Models/
 *.vc.*
 *.user
 *.sdf
 *.dll
+*.exe
