@@ -25,12 +25,12 @@ namespace openGL
 
 	struct Mesh
 	{
-		const std::vector<GLuint> Indices() const { return _indices; }
-		const std::vector<openGL::Texture> Textures() const { return _textures; }
+		const std::vector<GLuint>& Indices() const { return _indices; }
+		const std::vector<openGL::Texture>& Textures() const { return _textures; }
 		const std::vector<openGL::Vertex>& Vertices() const { return _vertices; }
 
-		Mesh(std::vector<openGL::Vertex>& vertices, std::vector<openGL::Texture>& textures, std::vector<GLuint>& indices)
-			: _vertices(vertices), _textures(textures), _indices(indices)
+		Mesh(std::vector<openGL::Vertex> vertices, std::vector<GLuint> indices, std::vector<openGL::Texture> textures)
+			: _vertices(vertices), _indices(indices), _textures(textures)
 		{
 			this->SetupMesh();
 		}
@@ -45,9 +45,9 @@ namespace openGL
 	protected:
 		GLuint _vertexBuffer, _indexBuffer, _vertexArray;
 
-		std::vector<GLuint>& _indices;
-		std::vector<openGL::Texture>& _textures;
-		std::vector<openGL::Vertex>& _vertices;
+		std::vector<openGL::Vertex> _vertices;
+		std::vector<GLuint> _indices;
+		std::vector<openGL::Texture> _textures;
 
 		void SetupMesh()
 		{
