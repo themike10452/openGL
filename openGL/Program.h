@@ -11,17 +11,23 @@ namespace openGL
 	enum VertexAttribLocations
 	{
 		POSITION = 0,
-		COLOR = 1,
-		NORMAL = 2,
-		UV = 3,
+		NORMAL = 1,
+		UV = 2,
+		COLOR = 3,
 	};
 
 	enum VertexUniformLocations
 	{
-		AMBIENT_LIGHT = 10,
-		MODEL_MATRIX = 20,
-		VIEW_MATRIX = 21,
-		PROJECTION_MATRIX = 22,
+		MODEL_MATRIX = 10,
+		VIEW_MATRIX = 11,
+		PROJECTION_MATRIX = 12,
+
+		SHININESS = 20,
+		AMBIENT_LIGHT = 21,
+		DIFFUSE_LIGHT = 22,
+		SPECULAR_LIGHT = 23,
+
+		LIGHT0_POSITION = 24,
 	};
 
 	struct Program
@@ -60,8 +66,11 @@ namespace openGL
 					printf("%s\n", &errorMessage[0]);
 					if (status != GL_TRUE)
 					{
-						char* message = "Failed to compile shader: ";
-						strcat_s(message, sizeof(filepath), filepath);
+						std::stringstream ss;
+						ss << "Failed to compile shader: " << filepath;
+						std::string log = ss.str();
+						const char* message = log.c_str();
+						printf("%s\n", message);
 						throw std::exception(message);
 					}
 				}
@@ -95,9 +104,28 @@ namespace openGL
 			}
 		}
 
-		void Use() const
+		void Bind() const
 		{
 			glUseProgram(_programId);
+		}
+
+		void Unbind() const
+		{
+			glUseProgram(0);
+		}
+
+		void SetUniformMat4fv(GLint location, const float* value) const
+		{
+			Bind();
+			glUniformMatrix4fv(location, 1, GL_FALSE, value);
+			Unbind();
+		}
+
+		void SetUniform4fv(GLint location, const float* value) const
+		{
+			Bind();
+			glUniform4fv(location, 1, value);
+			Unbind();
 		}
 
 		virtual ~Program()

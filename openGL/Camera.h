@@ -12,8 +12,11 @@ namespace openGL
 {
 	struct Camera : IUpdatable
 	{
-		float* ViewMatrixPtr() { return glm::value_ptr(_viewMatrix); }
-		float* ProjectionMatrixPtr() { return glm::value_ptr(_projectionMatrix); }
+		const float* ViewMatrixPtr() { return glm::value_ptr(_viewMatrix); }
+		const float* ProjectionMatrixPtr() { return glm::value_ptr(_projectionMatrix); }
+		const glm::mat4& ViewMatrix() const { return _viewMatrix; }
+		const glm::mat4& ProjectionMatrix() const { return _projectionMatrix; }
+		glm::mat4 ViewProjectionMatrix() const { return _projectionMatrix * _viewMatrix; }
 
 		explicit Camera(Window& window)
 			: _window(window)

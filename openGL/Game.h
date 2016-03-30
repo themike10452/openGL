@@ -5,15 +5,16 @@
 #include "Program.h"
 #include "Window.h"
 #include "Camera.h"
+#include "Clock.h"
 #include "Model.h"
 
 namespace openGL
 {
 	struct Game
 	{
-		Camera& Camera() { return _camera; }
-		Program& Program() { return _program; }
-		Window& Window() { return _window; }
+		openGL::Camera& Camera() { return _camera; }
+		openGL::Clock& Clock() { return _clock; }
+		openGL::Window& Window() { return _window; }
 
 		Game()
 			: _camera(_window)
@@ -34,6 +35,7 @@ namespace openGL
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			AddComponent(&_camera);
+			AddComponent(&_clock);
 			AddComponent(&_window);
 
 			OnLoad();
@@ -42,6 +44,8 @@ namespace openGL
 
 		void Start()
 		{
+			_clock.Start();
+
 			while (!_window.ShouldClose())
 			{
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -53,24 +57,13 @@ namespace openGL
 				_window.SwapBuffers();
 				glfwPollEvents();
 			}
+
+			Stop();
 		}
 
-		void AddComponent(IComponent* component)
+		void Stop()
 		{
-			_components.push_back(component);
-		}
-
-		void LoadModel(openGL::Model& model)
-		{
-			_models.push_back(model);
-		}
-
-		void DrawModels()
-		{
-			for(openGL::Model model : _models)
-			{
-				model.Draw();
-			}
+			_clock.Stop();
 		}
 
 		void Exit()
@@ -78,19 +71,27 @@ namespace openGL
 			Window().Close();
 		}
 
+		void LoadModel(openGL::Model* model)
+		{
+			_models.push_back(model);
+		}
+
+		void DrawModels()
+		{
+			for (openGL::Model* model : _models)
+			{
+				model->Draw();
+			}
+		}
+
 		int GetKey(int key) const
 		{
 			return _window.GetKey(key);
 		}
 
-		void CompileShader(std::vector<ShaderDefinition> &shaders)
+		void AddComponent(IComponent* component)
 		{
-			_program.Compile(shaders);
-		}
-
-		void UseProgram() const
-		{
-			_program.Use();
+			_components.push_back(component);
 		}
 
 		virtual void OnLoad();
@@ -107,11 +108,11 @@ namespace openGL
 
 	protected:
 		openGL::Camera _camera;
-		openGL::Program _program;
+		openGL::Clock _clock;
 		openGL::Window _window;
 
 		std::vector<IComponent*> _components;
-		std::vector<openGL::Model> _models;
+		std::vector<openGL::Model*> _models;
 
 		void InitializeComponents()
 		{

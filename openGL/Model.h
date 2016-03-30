@@ -6,13 +6,17 @@
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 #include "assimp/material.h"
+#include "Program.h"
 #include "Mesh.h"
 
 namespace openGL
 {
 	struct Model
 	{
-		explicit Model(std::string filepath)
+		std::vector<openGL::Mesh>& Meshes() { return _meshes; }
+
+		explicit Model(openGL::Program* shaderProgram, std::string filepath)
+			: _program(shaderProgram)
 		{
 			this->LoadModel(filepath);
 		}
@@ -20,13 +24,21 @@ namespace openGL
 		void Draw() const
 		{
 			GLuint count = _meshes.size();
-			for (GLuint i = 0; i < count; i++)
+			if (count != 0)
 			{
-				_meshes[i].Draw();
+				_program->Bind();
+
+				for (GLuint i = 0; i < count; i++)
+				{
+					_meshes[i].Draw();
+				}
+
+				_program->Unbind();
 			}
 		}
 
 	protected:
+		openGL::Program* _program;
 		std::vector<openGL::Mesh> _meshes;
 		std::string _directory;
 
@@ -41,7 +53,7 @@ namespace openGL
 				throw std::exception(importer.GetErrorString());
 			}
 
-			_directory = filepath.substr(0, filepath.find_last_of("/"));
+			_directory = filepath.substr(0, filepath.find_last_of("\\"));
 			this->ProcessNode(scene->mRootNode, scene);
 		}
 
@@ -96,7 +108,7 @@ namespace openGL
 				textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 			}
 
-			return openGL::Mesh(vertices, textures, indices);
+			return openGL::Mesh(vertices, indices, textures);
 		}
 
 		std::vector<openGL::Texture> loaded_textures;
@@ -105,7 +117,7 @@ namespace openGL
 		{
 			std::vector<openGL::Texture> textures;
 			GLuint count = material->GetTextureCount(type);
-			
+
 			for (GLuint i = 0; i < count; i++)
 			{
 				aiString str;
@@ -128,6 +140,7 @@ namespace openGL
 					texture.Type = typeName;
 					texture.Path = str;
 					textures.push_back(texture);
+					loaded_textures.push_back(texture);
 				}
 			}
 			return textures;

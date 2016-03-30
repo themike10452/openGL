@@ -61,7 +61,7 @@ namespace openGL
 
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 			glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -85,6 +85,11 @@ namespace openGL
 			glfwSetKeyCallback(_window, InputInterface::OnKeyDown<Game>);
 			glfwSetMouseButtonCallback(_window, InputInterface::OnMouseDown<Game>);
 			glfwSetCursorPosCallback(_window, InputInterface::OnMouseMove<Game>);
+		}
+
+		void Update() override
+		{
+			SetViewPort();
 		}
 
 		int ShouldClose() const
@@ -121,15 +126,6 @@ namespace openGL
 		void Destroy() const
 		{
 			if (_window) glfwDestroyWindow(_window);
-		}
-
-		void Initialize() override
-		{
-		}
-
-		void Update() override
-		{
-			SetViewPort();
 		}
 
 		virtual ~Window()

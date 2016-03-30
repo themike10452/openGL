@@ -11,6 +11,7 @@ namespace openGL
 	struct IUpdatable : IComponent
 	{
 		virtual void Update() = 0;
+		void Initialize() override {}
 	};
 }
 
