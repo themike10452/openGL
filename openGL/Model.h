@@ -43,7 +43,7 @@ namespace openGL
 		std::string _directory;
 
 	private:
-		void LoadModel(std::string filepath)
+		void LoadModel(std::string filepath) throw(std::exception)
 		{
 			Assimp::Importer importer;
 			const aiScene* scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs);

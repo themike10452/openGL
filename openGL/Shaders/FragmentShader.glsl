@@ -1,31 +1,38 @@
 #version 330 core
 #extension GL_ARB_explicit_uniform_location : require
 
-layout (location = 20) uniform float SurfaceShininess;
-layout (location = 21) uniform vec4 AmbientLight;
-layout (location = 22) uniform vec3 DiffuseLight;
-layout (location = 23) uniform vec3 SpecularLight;
+struct Light
+{
+	vec3 Color;
+	vec3 Position;
+	float Attenuation;
+};
 
-layout (location = 24) uniform vec4 LightPosition;
+uniform Light AmbientLight;
+
+uniform Light Lights[2];
 
 in vs_out
 {
-	vec4 fragmentColor;
-	vec4 fragmentPosition;
-	vec4 normal;
+	vec4 FragColor;
+	vec3 FragPosition;
+	vec3 Normal;
 } _vs_in;
 
 out vec4 Color;
 
 void main()
 {
-	vec4 lightDirection = normalize(LightPosition - _vs_in.fragmentPosition);
-
-	//diffuse
-	vec3 diffuseLight = vec3(1.0f, 1.0f, 1.0f);
-	float diffIntensity = max(dot(_vs_in.normal, lightDirection), 0.0f);
-	vec3 diffuse = diffIntensity * diffuseLight;
-
 	Color = vec4(0.6f, 0.6f, 0.6f, 1.0f);
-	Color = vec4((AmbientLight.rgb + diffuse) * Color.rgb, 1.0f);
+
+	vec3 diffuseLights = vec3(0.0f, 0.0f, 0.0f);
+
+	for(int i = 0; i < Lights.length(); i++)
+	{
+		vec3 lightDirection = normalize(Lights[i].Position - _vs_in.FragPosition);
+		float diffIntensity = max(dot(_vs_in.Normal, lightDirection), 0.0f);
+		diffuseLights += diffIntensity * Lights[i].Color;
+	}
+
+	Color = vec4((AmbientLight.Color + diffuseLights) * Color.rgb, 1.0f);
 }

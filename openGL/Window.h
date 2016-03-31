@@ -1,8 +1,8 @@
 #ifndef OPENGL_WINDOW_INCLUDED
 #define OPENGL_WINDOW_INCLUDED
 
-#include <exception>
 #define GLEW_STATIC
+#include <exception>
 #include <GLFW\glfw3.h>
 #include "Interfaces.h"
 
@@ -41,8 +41,8 @@ namespace openGL
 
 		static void error_callback(int error, const char* description)
 		{
-			///MessageBox::Show(nullptr, )
-			throw std::exception(description);
+			MessageBox(nullptr, description, "Exception", MB_OK);
+			exit(EXIT_FAILURE);
 		}
 
 		Window()
@@ -51,7 +51,7 @@ namespace openGL
 			_width = 800;
 			_height = 800;
 
-			glfwSetErrorCallback(error_callback);
+			//glfwSetErrorCallback(error_callback);
 		}
 
 		template<class Game>

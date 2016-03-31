@@ -20,14 +20,7 @@ namespace openGL
 	{
 		MODEL_MATRIX = 10,
 		VIEW_MATRIX = 11,
-		PROJECTION_MATRIX = 12,
-
-		SHININESS = 20,
-		AMBIENT_LIGHT = 21,
-		DIFFUSE_LIGHT = 22,
-		SPECULAR_LIGHT = 23,
-
-		LIGHT0_POSITION = 24,
+		PROJECTION_MATRIX = 12
 	};
 
 	struct Program
@@ -63,15 +56,14 @@ namespace openGL
 				{
 					std::vector<char> errorMessage(logLength + 1);
 					glGetShaderInfoLog(shaderId, logLength, nullptr, &errorMessage[0]);
-					printf("%s\n", &errorMessage[0]);
 					if (status != GL_TRUE)
 					{
 						std::stringstream ss;
-						ss << "Failed to compile shader: " << filepath;
+						ss << "Failed to compile shader: " << filepath << std::endl;
+						ss << &errorMessage[0];
 						std::string log = ss.str();
-						const char* message = log.c_str();
-						printf("%s\n", message);
-						throw std::exception(message);
+						printf("%s\n", log.c_str());
+						throw std::exception(log.c_str());
 					}
 				}
 
@@ -89,12 +81,16 @@ namespace openGL
 			glGetProgramiv(_programId, GL_LINK_STATUS, &status);
 			glGetProgramiv(_programId, GL_INFO_LOG_LENGTH, &logLength);
 
-			if (logLength > 0)
+			if (logLength > 0 && status != GL_TRUE)
 			{
 				std::vector<char> errorMessage(logLength + 1);
 				glGetProgramInfoLog(_programId, logLength, nullptr, &errorMessage[0]);
-				printf("%s\n", &errorMessage[0]);
-				if (status != GL_TRUE) throw std::exception("Failed to link shader program");
+				std::stringstream ss;
+				ss << "Failed to link shader program" << std::endl;
+				ss << &errorMessage[0];
+				std::string message = ss.str();
+				printf("%s\n", message.c_str());
+				throw std::exception(message.c_str());
 			}
 
 			for (int i = 0; i < count; i++)
@@ -114,17 +110,90 @@ namespace openGL
 			glUseProgram(0);
 		}
 
-		void SetUniformMat4fv(GLint location, const float* value) const
+		GLint GetUniformLocation(const char* name)
+		{
+			for (Uniform u : _uniforms)
+			{
+				if (u.Name == name)
+				{
+					return u.Location;
+				}
+			}
+
+			GLint location = glGetUniformLocation(_programId, name);;
+			_uniforms.push_back(Uniform(name, location));
+			return location;
+		}
+
+		void SetUniform1f(const char* name, float value)
+		{
+			SetUniform1f(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniform1f(GLint location, float value) const
 		{
 			Bind();
-			glUniformMatrix4fv(location, 1, GL_FALSE, value);
+			glUniform1f(location, value);
 			Unbind();
 		}
 
-		void SetUniform4fv(GLint location, const float* value) const
+		void SetUniform2fv(const char* name, const GLfloat* value)
+		{
+			this->SetUniform2fv(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniform2fv(GLint location, const GLfloat* value) const
+		{
+			Bind();
+			glUniform2fv(location, 1, value);
+			Unbind();
+		}
+
+		void SetUniform3fv(const char* name, const GLfloat* value)
+		{
+			this->SetUniform3fv(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniform3fv(GLint location, const GLfloat* value) const
+		{
+			Bind();
+			glUniform3fv(location, 1, value);
+			Unbind();
+		}
+
+		void SetUniform4fv(const char* name, const GLfloat* value)
+		{
+			this->SetUniform4fv(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniform4fv(GLint location, const GLfloat* value) const
 		{
 			Bind();
 			glUniform4fv(location, 1, value);
+			Unbind();
+		}
+
+		void SetUniformMat3fv(const char* name, const GLfloat* value)
+		{
+			this->SetUniformMat3fv(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniformMat3fv(GLint location, const GLfloat* value) const
+		{
+			Bind();
+			glUniformMatrix3fv(location, 1, GL_FALSE, value);
+			Unbind();
+		}
+
+		void SetUniformMat4fv(const char* name, const GLfloat* value)
+		{
+			this->SetUniformMat4fv(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniformMat4fv(GLint location, const GLfloat* value) const
+		{
+			Bind();
+			glUniformMatrix4fv(location, 1, GL_FALSE, value);
 			Unbind();
 		}
 
@@ -134,7 +203,17 @@ namespace openGL
 		}
 
 	protected:
+		struct Uniform
+		{
+			const char* Name;
+			GLint Location;
+
+			Uniform(const char* name, GLint location)
+				: Name(name), Location(location) {}
+		};
+
 		GLuint _programId;
+		std::vector<Uniform> _uniforms;
 	};
 }
 
