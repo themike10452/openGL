@@ -17,10 +17,10 @@ namespace openGL
 	glm::mat4 model_matrix;
 
 	std::vector<openGL::Model> models;
+	std::vector<openGL::Player> players;
 
 	openGL::Program program;
 	openGL::Terrain terrain;
-	//openGL::Player player("Models\\NanoSuit\\nanosuit.obj");
 
 	void Game::OnLoad()
 	{
@@ -34,19 +34,18 @@ namespace openGL
 		terrain.Initialize();
 
 		models.push_back(openGL::Model("Models\\Earth.obj"));
+		players.push_back(openGL::Player(this, &program, "Models\\NanoSuit\\nanosuit.obj"));
 	}
 
 	void Game::OnUpdate()
 	{
 		glClearColor(0.1f, 0.3f, 0.5f, 1.0f);
 
-		glm::vec3 cameraPosition = _camera.Position();
+		players[0].Update();
 
+		glm::vec3 cameraPosition = _camera.Position();
 		cameraPosition.y = glm::max(terrain.GetTerrainHeight(cameraPosition) + 2, cameraPosition.y);
 		_camera.SetPosition(cameraPosition);
-
-		std::string title(std::to_string(cameraPosition.x) + " " + std::to_string(cameraPosition.z));
-		this->Window().SetTitle(title.c_str());
 	}
 
 	void Game::OnDraw()
@@ -70,6 +69,12 @@ namespace openGL
 		program.SetUniformMat4fv("ModelMatrix", glm::value_ptr(model_matrix));
 
 		terrain.Draw();
+
+		glm::vec3 playerPos = players[0].Position();
+		playerPos.y = glm::max(terrain.GetTerrainHeight(playerPos), 0.f);
+		players[0].SetPosition(playerPos);
+
+		players[0].Draw();
 	}
 
 	void Game::OnKeyDown(int key, int action)

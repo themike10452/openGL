@@ -64,12 +64,7 @@ namespace openGL
 		if (_pitch > 89.0f) _pitch = 89.0f;
 		if (_pitch < -89.0f) _pitch = -89.0f;
 
-		_direction.x = cos(glm::radians(_pitch)) * cos(glm::radians(_yaw));
-		_direction.y = sin(glm::radians(_pitch));
-		_direction.z = cos(glm::radians(_pitch)) * sin(glm::radians(_yaw));
-		_direction = glm::normalize(_direction);
-
-		_right = glm::normalize(glm::cross(_up, _direction));
+		this->Entity::UpdateDirection();
 	}
 
 	void Camera::Rotate(float dx, float dy)

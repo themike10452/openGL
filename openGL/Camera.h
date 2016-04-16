@@ -47,7 +47,6 @@ namespace openGL
 		glm::mat4 _projectionMatrix;
 
 		float _lastX, _lastY;
-		float _pitch, _yaw;
 		bool _firstMouseEvent = true;
 
 	private:

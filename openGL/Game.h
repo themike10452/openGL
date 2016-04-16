@@ -2,7 +2,6 @@
 #define OPENGL_GAME_INCLUDED
 
 #include "Common.h"
-#include "Program.h"
 #include "Window.h"
 #include "Camera.h"
 #include "Clock.h"

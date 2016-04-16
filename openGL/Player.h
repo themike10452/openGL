@@ -3,19 +3,22 @@
 
 #include "Model.h"
 #include "Entity.h"
+#include "Game.h"
 
 namespace openGL
 {
 	struct Player : Model, Entity
 	{
-		explicit Player(std::string model)
-			: Model(model), Entity()
-		{
-		}
+		explicit Player(openGL::Game* game, openGL::Program* shaderProgram, std::string model);
 
-		virtual ~Player()
-		{
-		}
+		void Update();
+		void Draw() const;
+
+		virtual ~Player();
+
+	protected:
+		openGL::Game* _game;
+		openGL::Program* _program;
 	};
 }
 

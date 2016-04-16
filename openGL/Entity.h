@@ -14,6 +14,10 @@ namespace openGL
 
 		Entity();
 
+		virtual void Update();
+
+		virtual void UpdateDirection();
+
 		virtual void Move(glm::vec3& translate, bool correctMovement = true);
 
 		virtual void Move(float x, float y, float z, bool correctMovement = true);
@@ -32,6 +36,7 @@ namespace openGL
 
 	protected:
 		glm::vec3 _position, _direction, _right, _up;
+		float _pitch, _yaw;
 		unsigned int _mass;
 	};
 }

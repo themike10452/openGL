@@ -8,8 +8,29 @@ namespace openGL
 	/// -------
 
 	Entity::Entity()
-		: _position(), _mass(0)
+		: _position()
 	{
+		_mass = 0;
+		_pitch = 0;
+		_yaw = 0;
+		_up = glm::vec3(0, 1, 0);
+		_right = glm::vec3(1, 0, 0);
+		_direction = glm::vec3(0, 0, -1);
+	}
+
+	void Entity::Update()
+	{
+		UpdateDirection();
+	}
+
+	void Entity::UpdateDirection()
+	{
+		_direction.x = cos(glm::radians(_pitch)) * cos(glm::radians(_yaw));
+		_direction.y = sin(glm::radians(_pitch));
+		_direction.z = cos(glm::radians(_pitch)) * sin(glm::radians(_yaw));
+		_direction = glm::normalize(_direction);
+
+		_right = glm::normalize(glm::cross(_up, _direction));
 	}
 
 	void Entity::Move(glm::vec3& translate, bool correctMovement)

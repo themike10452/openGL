@@ -26,7 +26,27 @@ namespace openGL
 			int index = floor(z) * _heightmapWidth + floor(x);
 			if (index >= 0 && index < _vertices.size())
 			{
-				return _vertices[index].Position.y;
+				float gridX = x - floor(x);
+				float gridZ = z - floor(z);
+
+				glm::vec3 v1, v2, v3;
+
+				if (gridX > 1 - gridZ)
+				{
+					v1 = _vertices[index + 1].Position;
+					v2 = _vertices[index + _heightmapWidth].Position;
+					v3 = _vertices[index + _heightmapWidth + 1].Position;
+				}
+				else
+				{
+					v1 = _vertices[index].Position;
+					v3 = _vertices[index + 1].Position;
+					v2 = _vertices[index + _heightmapWidth].Position;
+				}
+
+				return Utils::BarycentricCoords(v1, v2, v3, gridX, gridZ);
+
+				//return _vertices[index].Position.y;
 			}
 			else
 			{
