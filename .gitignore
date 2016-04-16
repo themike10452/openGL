@@ -5,6 +5,7 @@ exclude/
 x64/
 x86/
 openGL/Models/
+openGL/Resources/
 *.vc.*
 *.user
 *.sdf

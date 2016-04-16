@@ -1,7 +1,7 @@
 #ifndef OPENGL_CLOCK_INCLUDED
 #define OPENGL_CLOCK_INCLUDED
 
-#include "GLFW/glfw3.h"
+#include "Common.h"
 #include "Interfaces.h"
 
 namespace openGL

@@ -1,7 +1,7 @@
 #ifndef OPENGL_GAME_INCLUDED
 #define OPENGL_GAME_INCLUDED
 
-#include <GL\glew.h>
+#include "Common.h"
 #include "Program.h"
 #include "Window.h"
 #include "Camera.h"
@@ -16,31 +16,11 @@ namespace openGL
 		openGL::Clock& Clock() { return _clock; }
 		openGL::Window& Window() { return _window; }
 
-		Game()
-			: _camera(_window)
+		Game(openGL::Window& window)
+			: _window(window), _camera(_window)
 		{
-		}
-
-		void Initialize()
-		{
-			if (!glfwInit()) throw std::exception("glfwinit() failed");
-			_window.Create(this);
-
-			glewExperimental = GL_TRUE;
-			if (glewInit() != GLEW_OK) throw std::exception("glewInit() failed");
-
-			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LESS);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-			AddComponent(&_camera);
-			AddComponent(&_clock);
-			AddComponent(&_window);
-
-			OnLoad();
-			InitializeComponents();
-		}
+			this->Initialize();
+		};
 
 		void Start()
 		{
@@ -71,6 +51,7 @@ namespace openGL
 			Window().Close();
 		}
 
+		//TODO
 		void LoadModel(openGL::Model* model)
 		{
 			_models.push_back(model);
@@ -80,7 +61,7 @@ namespace openGL
 		{
 			for (openGL::Model* model : _models)
 			{
-				model->Draw();
+				//model->Draw();
 			}
 		}
 
@@ -106,13 +87,25 @@ namespace openGL
 			glfwTerminate();
 		}
 
-	protected:
+	private:
 		openGL::Camera _camera;
 		openGL::Clock _clock;
 		openGL::Window _window;
 
 		std::vector<IComponent*> _components;
 		std::vector<openGL::Model*> _models;
+
+		void Initialize()
+		{
+			_window.Bind(this);
+
+			AddComponent(&_camera);
+			AddComponent(&_clock);
+			AddComponent(&_window);
+
+			OnLoad();
+			InitializeComponents();
+		}
 
 		void InitializeComponents()
 		{
@@ -124,7 +117,7 @@ namespace openGL
 
 		void UpdateComponents()
 		{
-			for(IComponent* c : _components)
+			for (IComponent* c : _components)
 			{
 				if (IUpdatable* u = dynamic_cast<IUpdatable*>(c))
 				{

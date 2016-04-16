@@ -1,28 +1,15 @@
 #ifndef OPENGL_PROGRAM_INCLUDED
 #define OPENGL_PROGRAM_INCLUDED
 
-#include <vector>
-#include <GL\glew.h>
+#include "Common.h"
 #include "ShaderDefinition.h"
 #include "Utils.h"
 
+#include <vector>
+#include <map>
+
 namespace openGL
 {
-	enum VertexAttribLocations
-	{
-		POSITION = 0,
-		NORMAL = 1,
-		UV = 2,
-		COLOR = 3,
-	};
-
-	enum VertexUniformLocations
-	{
-		MODEL_MATRIX = 10,
-		VIEW_MATRIX = 11,
-		PROJECTION_MATRIX = 12
-	};
-
 	struct Program
 	{
 		GLuint Id() const { return _programId; }
@@ -110,19 +97,28 @@ namespace openGL
 			glUseProgram(0);
 		}
 
-		GLint GetUniformLocation(const char* name)
+		GLuint GetUniformLocation(const char* name)
 		{
-			for (Uniform u : _uniforms)
+			if (_uniformLocations.count(name))
 			{
-				if (u.Name == name)
-				{
-					return u.Location;
-				}
+				return _uniformLocations[name];
 			}
+			else
+			{
+				GLuint location = glGetUniformLocation(_programId, name);
+				_uniformLocations[name] = location;
+				return location;
+			}
+		}
 
-			GLint location = glGetUniformLocation(_programId, name);;
-			_uniforms.push_back(Uniform(name, location));
-			return location;
+		void SetUniform1i(const char* name, int value)
+		{
+			SetUniform1i(this->GetUniformLocation(name), value);
+		}
+
+		void SetUniform1i(GLuint location, int value) const
+		{
+			glUniform1i(location, value);
 		}
 
 		void SetUniform1f(const char* name, float value)
@@ -130,11 +126,9 @@ namespace openGL
 			SetUniform1f(this->GetUniformLocation(name), value);
 		}
 
-		void SetUniform1f(GLint location, float value) const
+		void SetUniform1f(GLuint location, float value) const
 		{
-			Bind();
 			glUniform1f(location, value);
-			Unbind();
 		}
 
 		void SetUniform2fv(const char* name, const GLfloat* value)
@@ -142,11 +136,9 @@ namespace openGL
 			this->SetUniform2fv(this->GetUniformLocation(name), value);
 		}
 
-		void SetUniform2fv(GLint location, const GLfloat* value) const
+		void SetUniform2fv(GLuint location, const GLfloat* value) const
 		{
-			Bind();
 			glUniform2fv(location, 1, value);
-			Unbind();
 		}
 
 		void SetUniform3fv(const char* name, const GLfloat* value)
@@ -154,11 +146,9 @@ namespace openGL
 			this->SetUniform3fv(this->GetUniformLocation(name), value);
 		}
 
-		void SetUniform3fv(GLint location, const GLfloat* value) const
+		void SetUniform3fv(GLuint location, const GLfloat* value) const
 		{
-			Bind();
 			glUniform3fv(location, 1, value);
-			Unbind();
 		}
 
 		void SetUniform4fv(const char* name, const GLfloat* value)
@@ -166,11 +156,9 @@ namespace openGL
 			this->SetUniform4fv(this->GetUniformLocation(name), value);
 		}
 
-		void SetUniform4fv(GLint location, const GLfloat* value) const
+		void SetUniform4fv(GLuint location, const GLfloat* value) const
 		{
-			Bind();
 			glUniform4fv(location, 1, value);
-			Unbind();
 		}
 
 		void SetUniformMat3fv(const char* name, const GLfloat* value)
@@ -178,11 +166,9 @@ namespace openGL
 			this->SetUniformMat3fv(this->GetUniformLocation(name), value);
 		}
 
-		void SetUniformMat3fv(GLint location, const GLfloat* value) const
+		void SetUniformMat3fv(GLuint location, const GLfloat* value) const
 		{
-			Bind();
 			glUniformMatrix3fv(location, 1, GL_FALSE, value);
-			Unbind();
 		}
 
 		void SetUniformMat4fv(const char* name, const GLfloat* value)
@@ -190,11 +176,9 @@ namespace openGL
 			this->SetUniformMat4fv(this->GetUniformLocation(name), value);
 		}
 
-		void SetUniformMat4fv(GLint location, const GLfloat* value) const
+		void SetUniformMat4fv(GLuint location, const GLfloat* value) const
 		{
-			Bind();
 			glUniformMatrix4fv(location, 1, GL_FALSE, value);
-			Unbind();
 		}
 
 		virtual ~Program()
@@ -203,17 +187,10 @@ namespace openGL
 		}
 
 	protected:
-		struct Uniform
-		{
-			const char* Name;
-			GLint Location;
-
-			Uniform(const char* name, GLint location)
-				: Name(name), Location(location) {}
-		};
-
 		GLuint _programId;
-		std::vector<Uniform> _uniforms;
+
+		typedef std::map<std::string, GLint> StringIntegerMap;
+		StringIntegerMap _uniformLocations;
 	};
 }
 

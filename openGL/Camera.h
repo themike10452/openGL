@@ -1,150 +1,57 @@
 #ifndef OPENGL_CAMERA_INCLUDED
 #define OPENGL_CAMERA_INCLUDED
 
+#include "Common.h"
 #include "Window.h"
 #include "Interfaces.h"
-
-#include "glm\glm.hpp"
-#include "glm\gtc\matrix_transform.hpp"
-#include "glm\gtc\type_ptr.hpp"
+#include "Entity.h"
 
 namespace openGL
 {
-	struct Camera : IUpdatable
+	struct Camera : IUpdatable, Entity
 	{
-		const float* ViewMatrixPtr() { return glm::value_ptr(_viewMatrix); }
-		const float* ProjectionMatrixPtr() { return glm::value_ptr(_projectionMatrix); }
-		const glm::mat4& ViewMatrix() const { return _viewMatrix; }
-		const glm::mat4& ProjectionMatrix() const { return _projectionMatrix; }
-		glm::mat4 ViewProjectionMatrix() const { return _projectionMatrix * _viewMatrix; }
+		/// Getters
+		float* ViewMatrixPtr();
+		float* ProjectionMatrixPtr();
+		const glm::mat4& ViewMatrix() const;
+		const glm::mat4& ProjectionMatrix() const;
+		glm::mat4 ViewProjectionMatrix() const;
+		/// -------
 
-		explicit Camera(Window& window)
-			: _window(window)
-		{
-			Reset();
-		}
+		explicit Camera(Window& window);
 
-		void UpdateViewMatrix()
-		{
-			glm::vec3 focusPoint = _eyePosition + _directionVector;
-			_viewMatrix = glm::lookAt(_eyePosition, focusPoint, glm::vec3(0, 1, 0)/*_upVector*/);
-		}
+		void UpdateViewMatrix();
 
-		void UpdateProjectionMatrix()
-		{
-			_projectionMatrix = glm::perspective(45.0f, _window.Ratio(), 0.1f, 100.0f);
-		}
+		void UpdateProjectionMatrix();
 
-		void UpdateDirection()
-		{
-			if (_pitch > 89.0f) _pitch = 89.0f;
-			if (_pitch < -89.0f) _pitch = -89.0f;
+		void UpdateDirection();
 
-			_directionVector.x = cos(glm::radians(_pitch)) * cos(glm::radians(_yaw));
-			_directionVector.y = sin(glm::radians(_pitch));
-			_directionVector.z = cos(glm::radians(_pitch)) * sin(glm::radians(_yaw));
-			_directionVector = glm::normalize(_directionVector);
+		void Update() override;
 
-			_rightVector = glm::normalize(glm::cross(_upVector, _directionVector));
-		}
+		void Rotate(float dx, float dy);
 
-		void Update() override
-		{
-			if (_window.GetKey(GLFW_KEY_LEFT)) _yaw--;
-			if (_window.GetKey(GLFW_KEY_RIGHT)) _yaw++;
-			if (_window.GetKey(GLFW_KEY_DOWN)) _pitch--;
-			if (_window.GetKey(GLFW_KEY_UP)) _pitch++;
+		void OnMouseMove(double x, double y);
 
-			glm::vec3 movement;
-			if (_window.GetKey(GLFW_KEY_A)) { movement.x -= MOVEMENT_STEP; }
-			if (_window.GetKey(GLFW_KEY_D)) { movement.x += MOVEMENT_STEP; }
-			if (_window.GetKey(GLFW_KEY_W)) { movement.z -= MOVEMENT_STEP; }
-			if (_window.GetKey(GLFW_KEY_S)) { movement.z += MOVEMENT_STEP; }
-			if (_window.GetKey(GLFW_KEY_C)) { movement.y -= MOVEMENT_STEP; }
-			if (_window.GetKey(GLFW_KEY_SPACE)) { movement.y += MOVEMENT_STEP; }
+		void OnKeyPress(int key, int action);
 
-			Move(movement);
+		void Reset();
 
-			UpdateDirection();
-			UpdateViewMatrix();
-			UpdateProjectionMatrix();
-		}
+		void Initialize() override;
 
-		void Rotate(float dx, float dy)
-		{
-			_yaw += dx;
-			_pitch += dy;
+		virtual ~Camera();
 
-			UpdateDirection();
-		}
+	protected:
+		openGL::Window& _window;
 
-		void Move(glm::vec3& movementVector)
-		{
-			_eyePosition += -movementVector.x * _rightVector;;
-			_eyePosition += -movementVector.z * _directionVector;;
-			_eyePosition += movementVector.y * _upVector;;
-		}
+		glm::mat4 _viewMatrix;
+		glm::mat4 _projectionMatrix;
 
-		void OnMouseMove(double x, double y)
-		{
-			if (_firstMouseEvent)
-			{
-				_lastX = x;
-				_lastY = y;
-				_firstMouseEvent = false;
-				return;
-			}
+		float _lastX, _lastY;
+		float _pitch, _yaw;
+		bool _firstMouseEvent = true;
 
-			float dx = x - _lastX;
-			float dy = _lastY - y;
-			_lastX = x;
-			_lastY = y;
-
-			dx *= 0.05f;
-			dy *= 0.05f;
-
-			Rotate(dx, dy);
-		}
-
-		void OnKeyPress(int key, int action)
-		{
-		}
-
-		void Reset()
-		{
-			_upVector = glm::vec3(0, 1, 0);
-			_rightVector = glm::vec3(1, 0, 0);
-			_directionVector = glm::vec3(0, 0, -1);
-			_eyePosition = glm::vec3(0, 0, 2);
-			_yaw = -90;
-			_pitch = 0;
-
-			UpdateDirection();
-			UpdateViewMatrix();
-			UpdateProjectionMatrix();
-		}
-
-		void Initialize() override
-		{
-		}
-
-		virtual ~Camera() {}
-
-		protected:
-
-			openGL::Window& _window;
-
-			glm::mat4 _viewMatrix;
-			glm::mat4 _projectionMatrix;
-
-			glm::vec3 _upVector;
-			glm::vec3 _rightVector;
-			glm::vec3 _directionVector;
-			glm::vec3 _eyePosition;
-
-			float _lastX, _lastY;
-			float _pitch, _yaw;
-			bool _firstMouseEvent = true;
+	private:
+		int GetKey(int key) const;
 	};
 }
 

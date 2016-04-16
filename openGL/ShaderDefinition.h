@@ -1,6 +1,7 @@
 #ifndef OPENGL_SHADER_DEFINITION_INCLUDED
 #define OPENGL_SHADER_DEFINITION_INCLUDED
-#include <GL\glew.h>
+
+#include "Common.h"
 
 namespace openGL
 {

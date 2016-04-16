@@ -1,57 +1,75 @@
-#define MOVEMENT_STEP 0.05f
-
 #include <Windows.h>
 #include <iostream>
+#include "Common.h"
 #include "Game.h"
 #include "Camera.h"
-#include "Light.h"
-#include "Model.h"
+#include "PointLight.h"
+#include "Terrain.h"
+#include "Player.h"
 #include "glm\gtc\type_ptr.hpp"
+#include "glm\gtc\matrix_transform.hpp"
 
 namespace openGL
 {
-	openGL::Program program;
-	openGL::Light ambientLight(glm::vec3(0.5f, 0.5f, 0.5f));
-	openGL::Light light0(glm::vec3(0.0f, 0.0f, 0.8f), glm::vec3(-3.0f, 2.0f, 3.0f));
-	openGL::Light light1(glm::vec3(0.8f, 0.0f, 0.0f), glm::vec3(3.0f, 2.0f, 3.0f));
+	openGL::Light ambientLight(glm::vec3(0.4f));
+	openGL::PointLight SunLight(glm::vec3(0.5f), glm::vec3(212.36, 268.34, 500.0), 0.0f);
 
 	glm::mat4 model_matrix;
+
+	std::vector<openGL::Model> models;
+
+	openGL::Program program;
+	openGL::Terrain terrain;
+	//openGL::Player player("Models\\NanoSuit\\nanosuit.obj");
 
 	void Game::OnLoad()
 	{
 		std::vector<ShaderDefinition> shaders;
-		shaders.push_back(ShaderDefinition("Shaders\\VertexShader.glsl", GL_VERTEX_SHADER));
-		shaders.push_back(ShaderDefinition("Shaders\\FragmentShader.glsl", GL_FRAGMENT_SHADER));
+		shaders.push_back(ShaderDefinition("Shaders\\1\\Base.vert", GL_VERTEX_SHADER));
+		shaders.push_back(ShaderDefinition("Shaders\\1\\Base.frag", GL_FRAGMENT_SHADER));
 		program.Compile(shaders);
 
-		this->LoadModel(new openGL::Model(&program, "Models\\Cube.stl"));
+		terrain.LoadHeightMap(1000, 1000, "Resources\\Terrain_HM.bmp");
+		terrain.LoadTexture("Resources\\Terrain_TM.bmp");
+		terrain.Initialize();
+
+		models.push_back(openGL::Model("Models\\Earth.obj"));
 	}
 
 	void Game::OnUpdate()
 	{
-		model_matrix = glm::rotate(glm::mat4(), glm::radians((float)(Clock().ElapsedTime() * 100)), glm::vec3(0, 1, 0));
+		glClearColor(0.1f, 0.3f, 0.5f, 1.0f);
+
+		glm::vec3 cameraPosition = _camera.Position();
+
+		cameraPosition.y = glm::max(terrain.GetTerrainHeight(cameraPosition) + 2, cameraPosition.y);
+		_camera.SetPosition(cameraPosition);
+
+		std::string title(std::to_string(cameraPosition.x) + " " + std::to_string(cameraPosition.z));
+		this->Window().SetTitle(title.c_str());
 	}
 
 	void Game::OnDraw()
 	{
-		glDisable(GL_CULL_FACE);
+		program.Bind();
 
-		//pass uniform data
-		program.SetUniformMat4fv(VertexUniformLocations::MODEL_MATRIX, glm::value_ptr(model_matrix));
-		program.SetUniformMat4fv(VertexUniformLocations::VIEW_MATRIX, _camera.ViewMatrixPtr());
-		program.SetUniformMat4fv(VertexUniformLocations::PROJECTION_MATRIX, _camera.ProjectionMatrixPtr());
-
+		program.SetUniformMat4fv("ViewMatrix", _camera.ViewMatrixPtr());
+		program.SetUniformMat4fv("ProjectionMatrix", _camera.ProjectionMatrixPtr());
+		program.SetUniform3fv("ViewPos", glm::value_ptr(_camera.Position()));
+		program.SetUniform3fv("SunPosition", glm::value_ptr(SunLight.Position()));
 		program.SetUniform3fv("AmbientLight.Color", glm::value_ptr(ambientLight.Color()));
 
-		program.SetUniform3fv("Lights[0].Color", glm::value_ptr(light0.Color()));
-		program.SetUniform3fv("Lights[0].Position", glm::value_ptr(light0.Position()));
-		program.SetUniform1f("Lights[0].Attenuation", light0.Attenuation());
+		//draw light source
+		glm::mat4 model = glm::translate(model_matrix, SunLight.Position());
+		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		program.SetUniformMat4fv("ModelMatrix", glm::value_ptr(model));
 
-		program.SetUniform3fv("Lights[1].Color", glm::value_ptr(light1.Color()));
-		program.SetUniform3fv("Lights[1].Position", glm::value_ptr(light1.Position()));
-		program.SetUniform1f("Lights[1].Attenuation", light1.Attenuation());
+		models[0].Draw(&program);
+		//------------------
 
-		this->DrawModels();
+		program.SetUniformMat4fv("ModelMatrix", glm::value_ptr(model_matrix));
+
+		terrain.Draw();
 	}
 
 	void Game::OnKeyDown(int key, int action)
@@ -60,9 +78,17 @@ namespace openGL
 
 		if (action)
 		{
-			//if (key == GLFW_KEY_KP_SUBTRACT) { ambient_light = glm::clamp(ambient_light - glm::vec3(0.1f, 0.1f, 0.1f), 0.0f, 1.0f); }
-			//if (key == GLFW_KEY_KP_ADD) { ambient_light = glm::clamp(ambient_light + glm::vec3(0.1f, 0.1f, 0.1f), 0.0f, 1.0f); }
+			if (key == GLFW_KEY_KP_ADD) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+			if (key == GLFW_KEY_KP_SUBTRACT) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
 			if (key == GLFW_KEY_ESCAPE) { Exit(); }
+			if (key == GLFW_KEY_INSERT) { terrain.ToggleNormalMapping(); }
+
+			if (key == GLFW_KEY_KP_8) { SunLight.Move(0, 0, -10); }
+			if (key == GLFW_KEY_KP_2) { SunLight.Move(0, 0, 10); }
+			if (key == GLFW_KEY_KP_4) { SunLight.Move(-10, 0, 0); }
+			if (key == GLFW_KEY_KP_6) { SunLight.Move(10, 0, 0); }
+			if (key == GLFW_KEY_KP_5) { SunLight.Move(0, -10, 0); }
+			if (key == GLFW_KEY_KP_0) { SunLight.Move(0, 10, 0); }
 		}
 	}
 
@@ -72,22 +98,6 @@ namespace openGL
 
 	void Game::OnMouseMove(double x, double y)
 	{
-		Camera().OnMouseMove(x, y);
-	}
-}
-
-void main()
-{
-	try
-	{
-		openGL::Game game;
-		game.Initialize();
-		game.Start();
-		exit(EXIT_SUCCESS);
-	}
-	catch (std::exception e)
-	{
-		MessageBox(nullptr, e.what(), "Exception", MB_OK);
-		exit(EXIT_FAILURE);
+		this->Camera().OnMouseMove(x, y);
 	}
 }
